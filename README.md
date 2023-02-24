@@ -72,49 +72,49 @@ Imagine yourself as the applicant for this role and perform the following task
  
 
 
-### /* 6. Generate a report which contains the top 5 customers who received an average high pre_invoice_discount_pct for the fiscal year 2021 and in the Indian market. The final output contains these fields,customer_code,customer ,average_discount_percentage (Let us consider it is asking the value  greater than the average value of pre_invoice_discount_pct) */
+### 6. Generate a report which contains the top 5 customers who received an average high pre_invoice_discount_pct for the fiscal year 2021 and in the Indian market. The final output contains these fields,customer_code,customer ,average_discount_percentage (Let us consider it is asking the value  greater than the average value of pre_invoice_discount_pct) 
 
-WITH cte13 AS(WITH cte6 AS(SELECT C.customer_code,C.customer,D.pre_invoice_discount_pct FROM dim_customer C 
-INNER JOIN fact_pre_invoice_deductions D ON C.customer_code=D.customer_code WHERE C.market="India" AND D.fiscal_year=2021) 
-SELECT cte6.*,(SELECT avg(pre_invoice_discount_pct) FROM cte6) AS average_value FROM cte6) 
-SELECT customer_code,customer,ROUND(pre_invoice_discount_pct*100,2) AS average_discount_pct FROM cte13 WHERE pre_invoice_discount_pct >average_value ORDER BY average_discount_pct DESC LIMIT 5 ;
+    WITH cte13 AS(WITH cte6 AS(SELECT C.customer_code,C.customer,D.pre_invoice_discount_pct FROM dim_customer C 
+    INNER JOIN fact_pre_invoice_deductions D ON C.customer_code=D.customer_code WHERE C.market="India" AND D.fiscal_year=2021) 
+    SELECT cte6.*,(SELECT avg(pre_invoice_discount_pct) FROM cte6) AS average_value FROM cte6) 
+    SELECT customer_code,customer,ROUND(pre_invoice_discount_pct*100,2) AS average_discount_pct FROM cte13 WHERE pre_invoice_discount_pct >average_value ORDER BY           average_discount_pct DESC LIMIT 5 ;
 
 
-### /* 7. Get the complete report of the Gross sales amount for the customer “Atliq Exclusive” for each month .This analysis helps to get an idea of low and high-performing months and take strategic decisions.The final report contains these columns: Month ,Year ,Gross sales Amount*/
+###  7. Get the complete report of the Gross sales amount for the customer “Atliq Exclusive” for each month .This analysis helps to get an idea of low and high-performing months and take strategic decisions.The final report contains these columns: Month ,Year ,Gross sales Amount
 
-SELECT DATE_FORMAT(date,'%M') as Month,YEAR(date) as Year,ROUND(SUM(fact_gross_price.gross_price*
-fact_sales_monthly.sold_quantity),2) as gross_sales_amount FROM fact_sales_monthly 
-INNER JOIN fact_gross_price ON  fact_sales_monthly.product_code=fact_gross_price.product_code
-INNER JOIN dim_customer ON fact_sales_monthly.customer_code=dim_customer.customer_code
-WHERE dim_customer.customer="Atliq Exclusive" group by Month,Year ;
+     SELECT DATE_FORMAT(date,'%M') as Month,YEAR(date) as Year,ROUND(SUM(fact_gross_price.gross_price*
+     fact_sales_monthly.sold_quantity),2) as gross_sales_amount FROM fact_sales_monthly 
+     INNER JOIN fact_gross_price ON  fact_sales_monthly.product_code=fact_gross_price.product_code
+     INNER JOIN dim_customer ON fact_sales_monthly.customer_code=dim_customer.customer_code
+     WHERE dim_customer.customer="Atliq Exclusive" group by Month,Year ;
 
-### /*8. In which quarter of 2020, got the maximum total_sold_quantity? The final output contains these fields sorted by the total_sold_quantity,Quarter ,total_sold_quantity */
+###  8. In which quarter of 2020, got the maximum total_sold_quantity? The final output contains these fields sorted by the total_sold_quantity,Quarter ,total_sold_quantity 
 
-WITH cte7 AS (SELECT date,MONTH(date) AS Month,sold_quantity FROM fact_sales_monthly 
-WHERE fiscal_year=2020 )SELECT  CASE WHEN Month IN (9,10,11) THEN '1' 
+     WITH cte7 AS (SELECT date,MONTH(date) AS Month,sold_quantity FROM fact_sales_monthly 
+     WHERE fiscal_year=2020 )SELECT  CASE WHEN Month IN (9,10,11) THEN '1' 
 										   WHEN Month IN (12,1,2) THEN '2' 
                                            WHEN Month IN (3,4,5) THEN '3 '
                                            WHEN Month IN (6,7,8) THEN '4' 
                                        END AS Quarter ,SUM(sold_quantity) AS total_sold_quantity   
                            FROM cte7  GROUP BY Quarter ORDER BY total_sold_quantity DESC  ;
  
- ### /* 9. Which channel helped to bring more gross sales in the fiscal year 2021 and the percentage of contribution? The final output contains these fields channel ,gross_sales_mln ,percentage*/
+ ###  9. Which channel helped to bring more gross sales in the fiscal year 2021 and the percentage of contribution? The final output contains these fields channel ,gross_sales_mln ,percentage
  
- WITH cte16 AS(SELECT C.channel,ROUND(SUM(A.sold_quantity*B.gross_price)/1000000,2) AS gross_sales_mln
- FROM fact_sales_monthly A 
- LEFT JOIN fact_gross_price B ON A.product_code=B.product_code
- LEFT JOIN dim_customer C ON A.customer_code=C.customer_code 
- WHERE A.fiscal_year=2021 GROUP BY C.channel  ORDER BY 2 DESC)
- SELECT *,ROUND(gross_sales_mln*100/SUM(gross_sales_mln) OVER(),2) AS percentage FROM cte16;
+      WITH cte16 AS(SELECT C.channel,ROUND(SUM(A.sold_quantity*B.gross_price)/1000000,2) AS gross_sales_mln
+      FROM fact_sales_monthly A 
+      LEFT JOIN fact_gross_price B ON A.product_code=B.product_code
+      LEFT JOIN dim_customer C ON A.customer_code=C.customer_code 
+      WHERE A.fiscal_year=2021 GROUP BY C.channel  ORDER BY 2 DESC)
+      SELECT *,ROUND(gross_sales_mln*100/SUM(gross_sales_mln) OVER(),2) AS percentage FROM cte16;
  
  
- ### /* 10. Get the Top 3 products in each division that have a high total_sold_quantity in the fiscal_year 2021? The final output contains these fields, division, product_code product, total_sold_quantity ,rank_order*/
+ ###  10. Get the Top 3 products in each division that have a high total_sold_quantity in the fiscal_year 2021? The final output contains these fields, division, product_code product, total_sold_quantity ,rank_order*/
 
-WITH cte12 AS(WITH cte11 AS(WITH cte10 AS(SELECT B.division,A.product_code,B.product,A.sold_quantity FROM fact_sales_monthly A 
-LEFT JOIN dim_product B ON A.product_code=B.product_code WHERE A.fiscal_year=2021) 
-SELECT  division,product_code,product,SUM(sold_quantity) AS total_sold_quantity
-FROM cte10 GROUP BY product) SELECT cte11.*,
-rank() OVER(partition by division order by total_sold_quantity DESC  ) AS rank_order from cte11 )
-SELECT * FROM cte12 WHERE rank_order < 4;
+      WITH cte12 AS(WITH cte11 AS(WITH cte10 AS(SELECT B.division,A.product_code,B.product,A.sold_quantity FROM fact_sales_monthly A 
+      LEFT JOIN dim_product B ON A.product_code=B.product_code WHERE A.fiscal_year=2021) 
+      SELECT  division,product_code,product,SUM(sold_quantity) AS total_sold_quantity
+      FROM cte10 GROUP BY product) SELECT cte11.*,
+      rank() OVER(partition by division order by total_sold_quantity DESC  ) AS rank_order from cte11 )
+      SELECT * FROM cte12 WHERE rank_order < 4;
   
   
