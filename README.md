@@ -56,8 +56,8 @@ WITH cte4 AS(SELECT p.segment,COUNT(DISTINCT p.product_code) AS product_count_20
 SELECT cte4.segment,product_count_2020,product_count_2021,(product_count_2021-product_count_2020)
 AS Difference FROM cte4 INNER JOIN cte5 ON cte4.segment=cte5.segment ORDER BY Difference DESC;
                             
-/*5. Get the products that have the highest and lowest manufacturing costs. The final output should contain 
-these fields product_code, product ,manufacturing_cost*/ 
+### /*5. Get the products that have the highest and lowest manufacturing costs. The final output should contain these fields product_code, product ,manufacturing_cost*/ 
+
 SELECT  * FROM
     (SELECT  p.product_code, p.product, m.manufacturing_cost FROM
      dim_product pINNER JOIN fact_manufacturing_cost m ON p.product_code = m.product_code
