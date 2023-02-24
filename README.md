@@ -20,55 +20,55 @@ Imagine yourself as the applicant for this role and perform the following task
 
 
 
-### /* 1. Provide the list of markets in which customer "Atliq Exclusive" operates its business in the APAC region.  */
+###  1. Provide the list of markets in which customer "Atliq Exclusive" operates its business in the APAC region.  
 
-SELECT DISTINCT(market) FROM dim_customer WHERE region = 'APAC' AND customer = 'Atliq Exclusive';
+     SELECT DISTINCT(market) FROM dim_customer WHERE region = 'APAC' AND customer = 'Atliq Exclusive';
 
 
-### /*2. What is the percentage of unique product increase in 2021 vs. 2020? The final output contains these fields, unique_products_2020 unique_products_2021 percentage_chg  */
+###  2. What is the percentage of unique product increase in 2021 vs. 2020? The final output contains these fields, unique_products_2020 unique_products_2021      percentage_chg  
 
-WITH cte1 AS (WITH cte as(SELECT DISTINCT(product_code) AS new_product_code,
-cost_year FROM fact_manufacturing_cost ORDER BY  cost_year) 
- SELECT 
+     WITH cte1 AS (WITH cte as(SELECT DISTINCT(product_code) AS new_product_code,
+     cost_year FROM fact_manufacturing_cost ORDER BY  cost_year) 
+     SELECT 
         sum(CASE WHEN cost_year= '2020'  THEN 1 Else null end)AS unique_products_2020,
         sum(CASE WHEN cost_year= '2021'  THEN 1 Else null end)AS unique_products_2021
- FROM cte) SELECT unique_products_2020,unique_products_2021,
+     FROM cte) SELECT unique_products_2020,unique_products_2021,
                 IF( unique_products_2021>unique_products_2020 ,
                 ROUND((ABS(unique_products_2021-unique_products_2020) *100/unique_products_2020),2),
                 ROUND((ABS(unique_products_2021-unique_products_2020) *100/unique_products_2021),2)) AS 
                  per_chg
-FROM cte1;
+     FROM cte1;
 
-### /* 3. Provide a report with all the unique product counts for each segment and sort them in descending order of product counts. The final output contains 2 fields, segment product_count  */
+###  3. Provide a report with all the unique product counts for each segment and sort them in descending order of product counts. The final output contains 2 fields, segment product_count  
 
-SELECT DISTINCT(segment) AS segment,COUNT(DISTINCT (product_code)) AS product_count FROM dim_product
-GROUP BY segment
-ORDER BY product_count DESC;
+     SELECT DISTINCT(segment) AS segment,COUNT(DISTINCT (product_code)) AS product_count FROM dim_product
+     GROUP BY segment
+     ORDER BY product_count DESC;
  
-### /* 4. Follow-up: Which segment had the most increase in unique products in 2021 vs 2020? The final output contains these fields, segment, product_count_2020, product_count_2021 ,difference*/
+###  4. Follow-up: Which segment had the most increase in unique products in 2021 vs 2020? The final output contains these fields, segment, product_count_2020, product_count_2021 ,difference
  
-WITH cte4 AS(SELECT p.segment,COUNT(DISTINCT p.product_code) AS product_count_2020 FROM dim_product p
+     WITH cte4 AS(SELECT p.segment,COUNT(DISTINCT p.product_code) AS product_count_2020 FROM dim_product p
           INNER JOIN fact_sales_monthly s ON p.product_code=s.product_code WHERE fiscal_year=2020 
           GROUP BY segment ORDER BY product_count_2020 DESC ),
       cte5 AS(SELECT p.segment,COUNT(DISTINCT p.product_code) AS product_count_2021 FROM dim_product p
       INNER JOIN fact_sales_monthly s ON p.product_code=s.product_code WHERE fiscal_year=2021 GROUP BY segment
 	  ORDER BY product_count_2021 DESC )
-SELECT cte4.segment,product_count_2020,product_count_2021,(product_count_2021-product_count_2020)
-AS Difference FROM cte4 INNER JOIN cte5 ON cte4.segment=cte5.segment ORDER BY Difference DESC;
+     SELECT cte4.segment,product_count_2020,product_count_2021,(product_count_2021-product_count_2020)
+     AS Difference FROM cte4 INNER JOIN cte5 ON cte4.segment=cte5.segment ORDER BY Difference DESC;
                             
-### /*5. Get the products that have the highest and lowest manufacturing costs. The final output should contain these fields product_code, product ,manufacturing_cost*/ 
+###  5. Get the products that have the highest and lowest manufacturing costs. The final output should contain these fields product_code, product ,manufacturing_cost*/ 
 
-SELECT  * FROM
-    (SELECT  p.product_code, p.product, m.manufacturing_cost FROM
-     dim_product pINNER JOIN fact_manufacturing_cost m ON p.product_code = m.product_code
-    ORDER BY manufacturing_cost DESC LIMIT 1) A 
-UNION 
-SELECT * FROM
-    (SELECT p.product_code, p.product, m.manufacturing_cost FROM
-     dim_product p INNER JOIN fact_manufacturing_cost m ON p.product_code = m.product_code
-    ORDER BY manufacturing_cost ASC
-    LIMIT 1) B
-;
+     SELECT  * FROM
+         (SELECT  p.product_code, p.product, m.manufacturing_cost FROM
+          dim_product pINNER JOIN fact_manufacturing_cost m ON p.product_code = m.product_code
+          ORDER BY manufacturing_cost DESC LIMIT 1) A 
+     UNION 
+     SELECT * FROM
+         (SELECT p.product_code, p.product, m.manufacturing_cost FROM
+         dim_product p INNER JOIN fact_manufacturing_cost m ON p.product_code = m.product_code
+         ORDER BY manufacturing_cost ASC
+         LIMIT 1) B;
+
  
 
 
